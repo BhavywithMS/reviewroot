@@ -2,11 +2,16 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/productModel');
 
+const getBaseUrl = () => {
+  return process.env.BASE_URL || 'http://localhost:3000';
+};
+
 // Create product
 router.post('/', async (req, res) => {
   try {
     const { name, description, adminName } = req.body;
-    const shareLink = `http://localhost:3000/feedback.html?product=${encodeURIComponent(name)}`;
+    const baseUrl = getBaseUrl();
+    const shareLink = `${baseUrl}/feedback.html?product=${encodeURIComponent(name)}`;
 
     const newProduct = new Product({
       name,
@@ -57,7 +62,10 @@ router.put('/:id', async (req, res) => {
 
     product.name = name || product.name;
     product.description = description || product.description;
-    product.shareLink = `http://localhost:3000/feedback.html?product=${encodeURIComponent(product.name)}`;
+    
+    // Update share link with new name
+    const baseUrl = getBaseUrl();
+    product.shareLink = `${baseUrl}/feedback.html?product=${encodeURIComponent(product.name)}`;
 
     await product.save();
     res.json(product);

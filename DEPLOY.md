@@ -1,228 +1,200 @@
-# Deploy Feedback Portal - Free Hosting Guide
+# Deployment Guide
 
-This guide provides step-by-step instructions to deploy your Feedback Portal project for free.
+Complete step-by-step instructions to deploy **ReviewRoot** for free.
 
 ---
 
 ## Prerequisites
 
-Before deploying, ensure you have:
-- A GitHub account (free)
-- A MongoDB Atlas account (free)
-- Node.js installed on your computer
+Before deploying, you need:
+
+1. **GitHub Account** - https://github.com (free)
+2. **MongoDB Atlas Account** - https://cloud.mongodb.com (free)
+3. **Node.js** installed locally
 
 ---
 
-## Step 1: Prepare Your Project
+## Step 1: Prepare MongoDB Atlas
 
-### 1.1 Update MongoDB Connection
-Update your `.env` file to work with MongoDB Atlas:
+### 1.1 Create MongoDB Atlas Account
+1. Go to https://cloud.mongodb.com
+2. Click "Try Free" 
+3. Sign up with Google or Email
 
-```env
-MONGO_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/feedbackdb?retryWrites=true&w=majority
-PORT=3000
+### 1.2 Create Free Cluster
+1. Click "Create" → "Deploy Free Cluster"
+2. Select nearest region (e.g., AWS, closest to you)
+3. Click "Create Cluster"
+
+### 1.3 Create Database User
+1. Click "Database Access" → "Add New Database User"
+2. Username: `reviewroot`
+3. Password: `yourpassword123` (remember this!)
+4. Click "Add User"
+
+### 1.4 Network Access
+1. Click "Network Access" → "Add IP Address"
+2. Select "Allow Access from Anywhere" (0.0.0.0/0)
+3. Click "Confirm"
+
+### 1.5 Get Connection String
+1. Click "Database" → "Connect" → "Drivers"
+2. Copy the connection string
+3. Replace `<password>` with your password
+
+Example:
 ```
-
-### 1.2 Update Server.js for Production
-Update `server.js` to handle dynamic port:
-
-```javascript
-const PORT = process.env.PORT || 3000;
-```
-
-### 1.3 Test Locally
-```bash
-cd "D:\SaaS Product\Feedback and Review Colletor"
-node server.js
+mongodb+srv://reviewroot:yourpassword123@cluster0.abc123.mongodb.net/reviewroot?retryWrites=true&w=majority
 ```
 
 ---
 
-## Step 2: Create GitHub Repository
+## Step 2: Push Code to GitHub
 
-### 2.1 Go to GitHub
-Visit: https://github.com
+### 2.1 Create GitHub Repository
+1. Go to https://github.com
+2. Click "+" → "New repository"
+3. Name: `reviewroot`
+4. Make it Public
+5. Click "Create repository"
 
-### 2.2 Create New Repository
-- Click "New" button
-- Repository name: `feedback-portal`
-- Choose "Public" (free)
-- Click "Create repository"
-
-### 2.3 Push Your Code
-Run these commands in your project folder:
-
+### 2.2 Push Code
+In your project folder:
 ```bash
 git init
 git add .
-git commit -m "Initial commit"
+git commit -m "Ready for deployment"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/feedback-portal.git
+git remote add origin https://github.com/YOUR_USERNAME/reviewroot.git
 git push -u origin main
 ```
 
 ---
 
-## Step 3: Deploy Backend (Render.com - FREE)
+## Step 3: Deploy on Render.com
 
 ### 3.1 Create Render Account
-1. Go to: https://render.com
-2. Sign up with GitHub
-3. Click "New+" → "Web Service"
+1. Go to https://render.com
+2. Click "Sign Up" → "GitHub"
+3. Authorize GitHub
 
-### 3.2 Connect GitHub
-- Select your repository: `feedback-portal`
-- Branch: `main`
+### 3.2 Deploy Web Service
+1. Click "New+" → "Web Service"
+2. Select your repository: `reviewroot`
+3. Configure:
+   - **Name**: `reviewroot`
+   - **Environment**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `node server.js`
+4. Click "Deploy Web Service"
 
-### 3.3 Configure Service
-- **Name**: feedback-portal-api
-- **Environment**: Node
-- **Build Command**: `npm install`
-- **Start Command**: `node server.js`
-
-### 3.4 Add Environment Variables
-Click "Advanced" → "Add Environment Variables":
+### 3.3 Add Environment Variables
+In Render dashboard, go to "Environment":
 
 | Key | Value |
-|-----|-------|
+|-----|--------|
 | MONGO_URI | Your MongoDB Atlas connection string |
 | PORT | 3000 |
+| NODE_ENV | production |
+| BASE_URL | https://reviewroot.onrender.com |
+| ALLOWED_ORIGINS | * |
+| JWT_SECRET | A random string (generate one) |
 
-### 3.5 Deploy
-- Click "Deploy Web Service"
-- Wait 2-3 minutes for deployment
-- Your API will be at: `https://feedback-portal-api.onrender.com`
+Wait 2-3 minutes for deployment!
 
----
-
-## Step 4: Update Code for Production URL
-
-### 4.1 Update Feedback Links
-In `routes/productRoutes.js`, change:
-```javascript
-const shareLink = `http://localhost:3000/feedback.html?product=${encodeURIComponent(name)}`;
+### 3.4 Get Your Live URL
+After deploy, you'll get a URL like:
 ```
-To:
-```javascript
-const shareLink = `https://feedback-portal-api.onrender.com/feedback.html?product=${encodeURIComponent(name)}`;
-```
-
-### 4.2 Update Frontend API Calls
-In `public/feedback.html`, update API calls:
-```javascript
-// Change from localhost to your render URL
-fetch('https://feedback-portal-api.onrender.com/api/reviews', ...)
-```
-
-### 4.3 Commit Changes
-```bash
-git add .
-git commit -m "Update for production"
-git push origin main
+https://reviewroot.onrender.com
 ```
 
 ---
 
-## Step 5: Alternative - Deploy Frontend Separately
-
-### Option A: Deploy Frontend on Vercel (FREE)
-
-1. Go to: https://vercel.com
-2. Sign up with GitHub
-3. Click "New Project"
-4. Import your GitHub repository
-5. Set output directory: `public`
-6. Deploy
-
-### Option B: Deploy Everything on Render
-
-1. Keep everything on Render
-2. Create a "Static Site" service
-3. Point to your `public` folder
-
----
-
-## Complete Deployment Checklist
-
-### MongoDB Atlas Setup
-- [ ] Create free MongoDB Atlas account
-- [ ] Create free cluster (M0)
-- [ ] Create database user
-- [ ] Get connection string
-- [ ] Add IP to whitelist (0.0.0.0 for all)
-
-### GitHub Setup
-- [ ] Create GitHub repository
-- [ ] Push all code
-- [ ] Make repository public
-
-### Backend Deployment
-- [ ] Deploy to Render.com
-- [ ] Add environment variables
-- [ ] Test API endpoints
-
-### Frontend Deployment
-- [ ] Update all localhost URLs to production URL
-- [ ] Deploy frontend (Vercel or Render)
-- [ ] Test complete flow
-
----
-
-## Testing Your Deployed App
+## Step 4: Test Your Deployed App
 
 ### Test Flow:
-1. Visit your frontend URL
-2. Register a business account
+1. Visit your Render URL (e.g., `https://reviewroot.onrender.com`)
+2. Click "Get Started" to register a business account
 3. Login to dashboard
 4. Add a product
 5. Copy the feedback link
-6. Open incognito window
-7. Visit feedback link as customer
-8. Register/Login as customer
-9. Submit a review
-10. See review on business dashboard
+6. Open in new incognito window
+7. As customer, register/login and give review
+8. See review appear on business dashboard
 
----
+### Test Commands
+```bash
+# Test health endpoint
+curl https://reviewroot.onrender.com/api/health
 
-## Common Issues & Fixes
+# Test reviews
+curl https://reviewroot.onrender.com/api/reviews
 
-### Issue: "Application Error"
-- Check logs in Render dashboard
-- Ensure MONGO_URI is correct
-- Verify port is set to 3000
-
-### Issue: "CORS Error"
-- Update CORS in server.js:
-```javascript
-app.use(cors({
-  origin: ['https://your-frontend.vercel.app']
-}));
+# Test products
+curl https://reviewroot.onrender.com/api/products
 ```
 
-### Issue: "Module Not Found"
-- Ensure package.json has all dependencies
-- Check that node_modules is not in .gitignore
+---
+
+## Important Notes
+
+### URLs Format
+- Your app: `https://reviewroot.onrender.com`
+- Feedback links: `https://reviewroot.onrender.com/feedback.html?product=ProductName`
+- API: `https://reviewroot.onrender.com/api/...`
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| MongoDB connection error | Check username/password in MONGO_URI |
+| CORS error | Update ALLOWED_ORIGINS in .env |
+| 404 on routes | Add '/api' prefix to routes if needed |
+| Module not found | Ensure npm install runs before deploy |
+
+### Keeping Backend Running 24/7
+
+Render's free tier sleeps after 15 min of inactivity. To keep it awake 24/7:
+
+#### Option A: Use Cron-Job.org (Recommended - Free)
+
+1. Go to https://cron-job.org
+2. Register for free account
+3. Click "Create cronjob"
+4. Configure:
+   - **Title**: `Ping ReviewRoot`
+   - **URL**: `https://reviewroot.onrender.com/api/health`
+   - **Schedule**: Every 15 minutes
+   - **HTTP Method**: GET
+5. Click "Create"
+
+#### Option B: Use GitHub Actions
+
+Create `.github/workflows/ping.yml`:
+
+```yaml
+name: Ping Render
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render
+        run: curl -s https://reviewroot.onrender.com/api/health
+```
+
+Push this file to GitHub - it will run every 15 minutes.
 
 ---
 
-## Free Hosting Options Summary
+## Success!
 
-| Service | What to Deploy | Free Tier |
-|---------|---------------|-----------|
-| Render.com | Backend API | 750 hours/month |
-| Vercel | Frontend | Unlimited |
-| MongoDB Atlas | Database | 512MB storage |
+Your ReviewRoot app is now live!
 
----
+- **App URL**: https://reviewroot.onrender.com
 
-## Support
-
-If you need help:
-1. Check Render.com logs
-2. Test API with Postman
-3. Verify MongoDB connection
-4. Check GitHub issues
-
----
-
-**Happy Deployment! 🚀**
+Share your feedback links and start collecting reviews!
