@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register - FeedbackPortal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { background-color: #f8f9fa; height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card-container { width: 100%; max-width: 400px; }
+  </style>
+</head>
+<body>
+
+  <div class="card-container p-3">
+    <div class="card shadow border-0 rounded-4">
+      <div class="card-body p-5">
+        <h3 class="text-center mb-4 fw-bold">Register Your Business</h3>
+        <p class="text-center text-muted mb-4">Create a business account to manage products and collect customer reviews</p>
+
+        <form id="registerForm">
+          <div class="mb-3">
+            <label for="fullName" class="form-label">Your Name</label>
+            <input type="text" class="form-control" id="fullName" placeholder="John Doe" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="businessName" class="form-label">Business Name (Optional)</label>
+            <input type="text" class="form-control" id="businessName" placeholder="My Company">
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Register Business</button>
+        </form>
+
+        <div class="text-center mt-4">
+          <p class="mb-0">Already have a business account? <a href="login.html">Login here</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const name = document.getElementById('fullName').value.trim();
+      const businessName = document.getElementById('businessName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const btn = e.target.querySelector('button');
+      
+      btn.disabled = true;
+      btn.textContent = 'Registering...';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, businessName })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Business account created! Please login.');
+          window.location.href = 'login.html';
+        } else {
+          alert(data.message || 'Registration failed');
+        }
+      } catch (err) {
+        alert('Server error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Register Business';
+      }
+    });
+  </script>
+</body>
+</html>

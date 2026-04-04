@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - FeedbackPortal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body { background: #f8f9fa; }
+    .stat-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#"><i class="bi bi-chat-square-text me-2"></i>FeedbackPortal</a>
+      <div class="d-flex">
+        <button class="btn btn-outline-light btn-sm me-2" onclick="openSettings()"><i class="bi bi-gear"></i> Settings</button>
+        <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <h2 class="mb-4">My Dashboard</h2>
+    
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="text-muted small">Total Products</div>
+          <h3 class="mb-0" id="totalProducts">-</h3>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="text-muted small">Total Reviews</div>
+          <h3 class="mb-0" id="totalReviews">-</h3>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="text-muted small">Average Rating</div>
+          <h3 class="mb-0" id="avgRating">-</h3>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="text-muted small">This Month</div>
+          <h3 class="mb-0" id="monthReviews">-</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Product -->
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="mb-0">Add New Product</h5></div>
+      <div class="card-body">
+        <form id="productForm" class="row g-3">
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="productName" placeholder="Product Name" required>
+          </div>
+          <div class="col-md-4">
+            <input type="text" class="form-control" id="productDesc" placeholder="Description" required>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Add Product</button>
+          </div>
+          <div class="col-md-2">
+            <button type="button" class="btn btn-secondary w-100" onclick="loadData()">Refresh</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between">
+        <h5 class="mb-0">My Products</h5>
+        <button class="btn btn-sm btn-success" onclick="exportProducts()">Export CSV</button>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Description</th>
+              <th>Reviews</th>
+              <th>Rating</th>
+              <th>Link</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTable">
+            <tr><td colspan="6" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Reviews -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Customer Reviews</h5>
+      </div>
+      <div class="card-body">
+        <div id="reviewsGrid" class="row">
+          <p class="text-muted">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Settings</h5></div>
+        <div class="modal-body">
+          <button class="btn btn-outline-primary w-100 mb-2" onclick="openEditProfile()">Edit Profile</button>
+          <button class="btn btn-outline-warning w-100 mb-2" onclick="openChangePassword()">Change Password</button>
+          <button class="btn btn-outline-success w-100" onclick="exportReviews()">Export Reviews</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Edit Profile</h5></div>
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" id="editName"></div>
+          <div class="mb-3"><label class="form-label">Business Name</label><input type="text" class="form-control" id="editBusinessName"></div>
+          <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" id="editEmail"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="saveProfile()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Change Password</h5></div>
+        <div class="modal-body">
+          <div class="mb-3"><label class="form-label">Current Password</label><input type="password" class="form-control" id="currentPassword"></div>
+          <div class="mb-3"><label class="form-label">New Password</label><input type="password" class="form-control" id="newPassword"></div>
+          <div class="mb-3"><label class="form-label">Confirm Password</label><input type="password" class="form-control" id="confirmPassword"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="changePassword()">Change</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/login.html';
+
+    let allReviews = [];
+    let allProducts = [];
+    let settingsModal, editProfileModal, changePasswordModal;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+      editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+      changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+      loadData();
+    });
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = '/login.html';
+    }
+
+    async function loadData() {
+      document.getElementById('productsTable').innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+      document.getElementById('reviewsGrid').innerHTML = '<p class="text-center">Loading...</p>';
+      
+      try {
+        // Load reviews
+        const reviewsRes = await fetch('/api/reviews');
+        allReviews = await reviewsRes.json();
+        document.getElementById('totalReviews').textContent = allReviews.length || 0;
+        
+        // Calculate average
+        if (allReviews.length > 0) {
+          const sum = allReviews.reduce((s, r) => s + (r.rating || 0), 0);
+          document.getElementById('avgRating').textContent = '★ ' + (sum / allReviews.length).toFixed(1);
+          
+          // This month
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthCount = allReviews.filter(r => new Date(r.createdAt) >= monthStart).length;
+          document.getElementById('monthReviews').textContent = monthCount;
+        } else {
+          document.getElementById('avgRating').textContent = '-';
+          document.getElementById('monthReviews').textContent = 0;
+        }
+        
+        renderReviews(allReviews);
+      } catch (e) {
+        console.log('Reviews error:', e);
+      }
+
+      try {
+        // Load products
+        const productsRes = await fetch('/api/products', { headers: { 'Authorization': 'Bearer ' + token } });
+        allProducts = await productsRes.json();
+        document.getElementById('totalProducts').textContent = allProducts.length || 0;
+        
+        if (allProducts.length === 0) {
+          document.getElementById('productsTable').innerHTML = '<tr><td colspan="6" class="text-center">No products yet. Add one above!</td></tr>';
+        } else {
+          renderProducts();
+        }
+      } catch (e) {
+        console.log('Products error:', e);
+        document.getElementById('productsTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Failed to load products</td></tr>';
+      }
+    }
+
+    function renderProducts() {
+      const tbody = document.getElementById('productsTable');
+      let html = '';
+      
+      allProducts.forEach(p => {
+        const productReviews = allReviews.filter(r => r.productName === p.name);
+        const count = productReviews.length;
+        const avg = count > 0 ? (productReviews.reduce((s, r) => s + r.rating, 0) / count).toFixed(1) : '-';
+        const link = p.shareLink || (window.location.origin + '/feedback.html?product=' + encodeURIComponent(p.name));
+        
+        html += '<tr>';
+        html += '<td class="fw-bold">' + p.name + '</td>';
+        html += '<td>' + (p.description || '-') + '</td>';
+        html += '<td><span class="badge bg-primary">' + count + '</span></td>';
+        html += '<td>' + (avg === '-' ? '-' : '★ ' + avg) + '</td>';
+        html += '<td><a href="' + link + '" target="_blank">' + link.substring(0, 25) + '...</a></td>';
+        html += '<td><button class="btn btn-sm btn-danger" onclick="deleteProduct(\'' + p._id + '\')">Delete</button></td>';
+        html += '</tr>';
+      });
+      
+      tbody.innerHTML = html;
+    }
+
+    function renderReviews(reviews) {
+      const grid = document.getElementById('reviewsGrid');
+      if (!reviews || reviews.length === 0) {
+        grid.innerHTML = '<p class="text-muted text-center py-4">No reviews yet</p>';
+        return;
+      }
+      
+      let html = '';
+      reviews.forEach(r => {
+        const date = new Date(r.createdAt).toLocaleDateString();
+        html += '<div class="col-md-4 mb-3">';
+        html += '<div class="card h-100">';
+        html += '<div class="card-body">';
+        html += '<span class="badge bg-secondary mb-2">' + r.productName + '</span>';
+        html += '<div><strong>' + (r.reviewerName || 'Anonymous') + '</strong></div>';
+        html += '<div class="text-warning">' + '★'.repeat(r.rating) + '</div>';
+        html += '<p class="small text-muted mt-2">"' + r.comment + '"</p>';
+        html += '<small class="text-muted">' + date + '</small>';
+        html += '</div></div></div>';
+      });
+      
+      grid.innerHTML = html;
+    }
+
+    // Add product
+    document.getElementById('productForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      
+      try {
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({
+            name: document.getElementById('productName').value,
+            description: document.getElementById('productDesc').value,
+            adminName: 'Business'
+          })
+        });
+        if (res.ok) {
+          e.target.reset();
+          loadData();
+        }
+      } catch (err) {}
+      
+      btn.disabled = false;
+    });
+
+    // Delete product
+    window.deleteProduct = async function(id) {
+      if (!confirm('Delete this product?')) return;
+      try {
+        await fetch('/api/products/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+        loadData();
+      } catch (err) {}
+    };
+
+    // Export
+    window.exportProducts = function() {
+      if (!allProducts.length) return alert('No products');
+      let csv = 'Name,Description,Link\n';
+      allProducts.forEach(p => {
+        const link = p.shareLink || '';
+        csv += '"' + p.name + '","' + (p.description || '') + '","' + link + '"\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'products.csv';
+      a.click();
+    };
+
+    window.exportReviews = function() {
+      if (!allReviews.length) return alert('No reviews');
+      let csv = 'Product,Reviewer,Rating,Comment,Date\n';
+      allReviews.forEach(r => {
+        csv += '"' + r.productName + '","' + (r.reviewerName || '') + '",' + r.rating + ',"' + r.comment + '","' + r.createdAt + '"\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'reviews.csv';
+      a.click();
+    };
+
+    // Settings
+    window.openSettings = function() { settingsModal.show(); };
+    window.openEditProfile = function() { settingsModal.hide(); editProfileModal.show(); };
+    window.openChangePassword = function() { settingsModal.hide(); changePasswordModal.show(); };
+    
+    window.saveProfile = async function() {
+      const name = document.getElementById('editName').value;
+      const businessName = document.getElementById('editBusinessName').value;
+      const email = document.getElementById('editEmail').value;
+      
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ name, businessName, email })
+      });
+      
+      if (res.ok) {
+        editProfileModal.hide();
+        alert('Profile updated!');
+      }
+    };
+
+    window.changePassword = async function() {
+      const current = document.getElementById('currentPassword').value;
+      const newPass = document.getElementById('newPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      
+      if (newPass !== confirm) return alert('Passwords do not match');
+      
+      const res = await fetch('/api/auth/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ currentPassword: current, newPassword: newPass })
+      });
+      
+      if (res.ok) {
+        changePasswordModal.hide();
+        alert('Password changed!');
+      } else {
+        alert('Failed to change password');
+      }
+    };
+  </script>
+</body>
+</html>
