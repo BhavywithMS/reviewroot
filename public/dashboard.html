@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard - FeedbackPortal</title>
+  <title>Dashboard - ReviewRoot</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <style>
@@ -15,7 +15,7 @@
 
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="#"><i class="bi bi-chat-square-text me-2"></i>FeedbackPortal</a>
+      <a class="navbar-brand" href="#"><i class="bi bi-chat-square-text me-2"></i>ReviewRoot</a>
       <div class="d-flex">
         <button class="btn btn-outline-light btn-sm me-2" onclick="openSettings()"><i class="bi bi-gear"></i> Settings</button>
         <button class="btn btn-outline-light btn-sm" onclick="logout()">Logout</button>
@@ -342,7 +342,17 @@
 
     // Settings
     window.openSettings = function() { settingsModal.show(); };
-    window.openEditProfile = function() { settingsModal.hide(); editProfileModal.show(); };
+    window.openEditProfile = async function() {
+      settingsModal.hide();
+      try {
+        const res = await fetch('/api/auth/profile', { headers: { 'Authorization': 'Bearer ' + token } });
+        const user = await res.json();
+        document.getElementById('editName').value = user.name || '';
+        document.getElementById('editBusinessName').value = user.businessName || '';
+        document.getElementById('editEmail').value = user.email || '';
+      } catch (e) {}
+      editProfileModal.show();
+    };
     window.openChangePassword = function() { settingsModal.hide(); changePasswordModal.show(); };
     
     window.saveProfile = async function() {
