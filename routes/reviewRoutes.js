@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Review = require('../models/reviewModel');
 
-router.post('/api/reviews', async (req, res) => {
+router.post('/reviews', async (req, res) => {
   try {
     const { productName, reviewer, reviewerName, reviewerEmail, rating, comment } = req.body;
     
@@ -22,7 +22,7 @@ router.post('/api/reviews', async (req, res) => {
   }
 });
 
-router.get('/api/reviews', async (req, res) => {
+router.get('/reviews', async (req, res) => {
   try {
     const reviews = await Review.find({ status: 'approved' }).populate('reviewer', 'name email');
     res.json(reviews);
