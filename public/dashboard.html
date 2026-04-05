@@ -54,6 +54,28 @@
       </div>
     </div>
 
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <button class="btn btn-outline-success w-100" onclick="exportReviews()">
+          <i class="bi bi-download"></i> Export Reviews
+        </button>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-outline-info w-100" onclick="showAnalytics()">
+          <i class="bi bi-graph-up"></i> Analytics
+        </button>
+      </div>
+      <div class="col-md-3">
+        <input type="text" class="form-control" id="searchProducts" placeholder="Search products..." onkeyup="searchProducts()">
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-outline-secondary w-100" onclick="loadData()">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+    </div>
+
     <!-- Add Product -->
     <div class="card mb-4">
       <div class="card-header"><h5 class="mb-0">Add New Product</h5></div>
@@ -103,7 +125,29 @@
     <!-- Reviews -->
     <div class="card">
       <div class="card-header">
-        <h5 class="mb-0">Customer Reviews</h5>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="mb-0">Customer Reviews</h5>
+          <div class="d-flex gap-2 align-items-center">
+            <select class="form-select form-select-sm" id="filterProduct" onchange="applyFilters()" style="width: auto;">
+              <option value="">All Products</option>
+            </select>
+            <select class="form-select form-select-sm" id="filterRating" onchange="applyFilters()" style="width: auto;">
+              <option value="">All Ratings</option>
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+            <select class="form-select form-select-sm" id="sortBy" onchange="applyFilters()" style="width: auto;">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="highest">Highest Rating</option>
+              <option value="lowest">Lowest Rating</option>
+            </select>
+            <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">Clear</button>
+          </div>
+        </div>
       </div>
       <div class="card-body">
         <div id="reviewsGrid" class="row">
@@ -163,6 +207,126 @@
     </div>
   </div>
 
+  <!-- Edit Product Modal -->
+  <div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Edit Product</h5></div>
+        <div class="modal-body">
+          <input type="hidden" id="editProductId">
+          <div class="mb-3"><label class="form-label">Product Name</label><input type="text" class="form-control" id="editProductName"></div>
+          <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control" id="editProductDesc" rows="3"></textarea></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="saveProduct()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Product Modal -->
+  <div class="modal fade" id="shareProductModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Share Product</h5></div>
+        <div class="modal-body">
+          <p class="small text-muted">Share this link to collect reviews:</p>
+          <div class="input-group mb-3">
+            <input type="text" class="form-control" id="shareLink" readonly>
+            <button class="btn btn-outline-primary" onclick="copyShareLink()"><i class="bi bi-clipboard"></i> Copy</button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Share via:</label>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-info" onclick="shareViaEmail()"><i class="bi bi-envelope"></i> Email</button>
+              <button class="btn btn-sm btn-outline-primary" onclick="shareViaWhatsApp()"><i class="bi bi-whatsapp"></i> WhatsApp</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analytics Modal -->
+  <div class="modal fade" id="analyticsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Analytics Dashboard</h5></div>
+        <div class="modal-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="card bg-light">
+                <div class="card-body text-center">
+                  <h6 class="text-muted">Total Reviews</h6>
+                  <h2 id="analyticsTotalReviews">-</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card bg-light">
+                <div class="card-body text-center">
+                  <h6 class="text-muted">Average Rating</h6>
+                  <h2 id="analyticsAvgRating">-</h2>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h6>5 Star Reviews</h6>
+                  <h4 id="analytics5Star" class="text-success">-</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h6>4 Star Reviews</h6>
+                  <h4 id="analytics4Star" class="text-info">-</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h6>3 Star Reviews</h6>
+                  <h4 id="analytics3Star" class="text-warning">-</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h6>2 Star Reviews</h6>
+                  <h4 id="analytics2Star" class="text-warning">-</h4>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body">
+                  <h6>1 Star Reviews</h6>
+                  <h4 id="analytics1Star" class="text-danger">-</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const token = localStorage.getItem('token');
@@ -176,12 +340,58 @@
       settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
       editProfileModal = new bootstrap.Modal(document.getElementById('editProfileModal'));
       changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+      editProductModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+      shareProductModal = new bootstrap.Modal(document.getElementById('shareProductModal'));
+      analyticsModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
       loadData();
     });
 
     function logout() {
       localStorage.clear();
       window.location.href = '/login.html';
+    }
+
+    function populateProductFilter() {
+      const select = document.getElementById('filterProduct');
+      allProducts.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.name;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+      });
+    }
+
+    function applyFilters() {
+      let filtered = [...allReviews];
+      
+      const productFilter = document.getElementById('filterProduct').value;
+      const ratingFilter = document.getElementById('filterRating').value;
+      const sortBy = document.getElementById('sortBy').value;
+      
+      if (productFilter) {
+        filtered = filtered.filter(r => r.productName === productFilter);
+      }
+      
+      if (ratingFilter) {
+        filtered = filtered.filter(r => r.rating === parseInt(ratingFilter));
+      }
+      
+      filtered.sort((a, b) => {
+        if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+        if (sortBy === 'highest') return b.rating - a.rating;
+        if (sortBy === 'lowest') return a.rating - b.rating;
+        return 0;
+      });
+      
+      renderReviews(filtered);
+    }
+
+    function clearFilters() {
+      document.getElementById('filterProduct').value = '';
+      document.getElementById('filterRating').value = '';
+      document.getElementById('sortBy').value = 'newest';
+      renderReviews(allReviews);
     }
 
     async function loadData() {
@@ -224,6 +434,7 @@
           document.getElementById('productsTable').innerHTML = '<tr><td colspan="6" class="text-center">No products yet. Add one above!</td></tr>';
         } else {
           renderProducts();
+          populateProductFilter();
         }
       } catch (e) {
         console.log('Products error:', e);
@@ -247,7 +458,11 @@
         html += '<td><span class="badge bg-primary">' + count + '</span></td>';
         html += '<td>' + (avg === '-' ? '-' : '★ ' + avg) + '</td>';
         html += '<td><a href="' + link + '" target="_blank" title="' + link + '">' + link.substring(0, 30) + '...</a></td>';
-        html += '<td><button class="btn btn-sm btn-danger" onclick="deleteProduct(\'' + p._id + '\')">Delete</button></td>';
+        html += '<td>';
+        html += '<button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(\'' + p._id + '\')" title="Edit"><i class="bi bi-pencil"></i></button>';
+        html += '<button class="btn btn-sm btn-outline-success me-1" onclick="shareProduct(\'' + p._id + '\')" title="Share"><i class="bi bi-share"></i></button>';
+        html += '<button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(\'' + p._id + '\')" title="Delete"><i class="bi bi-trash"></i></button>';
+        html += '</td>';
         html += '</tr>';
       });
       
@@ -310,6 +525,65 @@
         await fetch('/api/products/' + id, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
         loadData();
       } catch (err) {}
+    };
+
+    let editProductModal, shareProductModal;
+
+    window.editProduct = async function(id) {
+      const product = allProducts.find(p => p._id === id);
+      if (!product) return;
+      document.getElementById('editProductId').value = id;
+      document.getElementById('editProductName').value = product.name;
+      document.getElementById('editProductDesc').value = product.description || '';
+      editProductModal.show();
+    };
+
+    window.saveProduct = async function() {
+      const id = document.getElementById('editProductId').value;
+      const name = document.getElementById('editProductName').value;
+      const description = document.getElementById('editProductDesc').value;
+      
+      const res = await fetch('/api/products/' + id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ name, description })
+      });
+      
+      if (res.ok) {
+        editProductModal.hide();
+        loadData();
+      } else {
+        alert('Failed to update product');
+      }
+    };
+
+    window.shareProduct = function(id) {
+      const product = allProducts.find(p => p._id === id);
+      if (!product) return;
+      const link = window.location.origin + '/feedback.html?product=' + encodeURIComponent(product.name);
+      document.getElementById('shareLink').value = link;
+      window.currentShareProduct = product.name;
+      shareProductModal.show();
+    };
+
+    window.copyShareLink = function() {
+      const copyText = document.getElementById('shareLink');
+      copyText.select();
+      navigator.clipboard.writeText(copyText.value);
+      alert('Link copied!');
+    };
+
+    window.shareViaEmail = function() {
+      const link = document.getElementById('shareLink').value;
+      const subject = encodeURIComponent('Share your experience with ' + window.currentShareProduct);
+      const body = encodeURIComponent('Please take a moment to share your feedback: ' + link);
+      window.open('mailto:?subject=' + subject + '&body=' + body);
+    };
+
+    window.shareViaWhatsApp = function() {
+      const link = document.getElementById('shareLink').value;
+      const text = encodeURIComponent('Share your experience with ' + window.currentShareProduct + ': ' + link);
+      window.open('https://wa.me/?text=' + text);
     };
 
     // Export
@@ -392,6 +666,62 @@
         alert('Failed to change password');
       }
     };
+
+    let analyticsModal;
+
+    window.showAnalytics = function() {
+      document.getElementById('analyticsTotalReviews').textContent = allReviews.length;
+      const avg = allReviews.length > 0 ? (allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length).toFixed(1) : 0;
+      document.getElementById('analyticsAvgRating').textContent = avg + ' ★';
+      
+      const counts = {5:0, 4:0, 3:0, 2:0, 1:0};
+      allReviews.forEach(r => counts[r.rating] = (counts[r.rating] || 0) + 1);
+      
+      document.getElementById('analytics5Star').textContent = counts[5];
+      document.getElementById('analytics4Star').textContent = counts[4];
+      document.getElementById('analytics3Star').textContent = counts[3];
+      document.getElementById('analytics2Star').textContent = counts[2];
+      document.getElementById('analytics1Star').textContent = counts[1];
+      
+      analyticsModal.show();
+    };
+
+    window.searchProducts = function() {
+      const query = document.getElementById('searchProducts').value.toLowerCase();
+      const filtered = allProducts.filter(p => p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query)));
+      renderProductsList(filtered);
+    };
+
+    function renderProductsList(products) {
+      const tbody = document.getElementById('productsTable');
+      if (!products.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products found</td></tr>';
+        return;
+      }
+      
+      let html = '';
+      products.forEach(p => {
+        const productReviews = allReviews.filter(r => r.productName === p.name);
+        const count = productReviews.length;
+        const avg = count > 0 ? (productReviews.reduce((s, r) => s + r.rating, 0) / count).toFixed(1) : '-';
+        const link = window.location.origin + '/feedback.html?product=' + encodeURIComponent(p.name);
+        
+        html += '<tr>';
+        html += '<td class="fw-bold">' + p.name + '</td>';
+        html += '<td>' + (p.description || '-') + '</td>';
+        html += '<td><span class="badge bg-primary">' + count + '</span></td>';
+        html += '<td>' + (avg === '-' ? '-' : '★ ' + avg) + '</td>';
+        html += '<td><a href="' + link + '" target="_blank" title="' + link + '">' + link.substring(0, 30) + '...</a></td>';
+        html += '<td>';
+        html += '<button class="btn btn-sm btn-outline-primary me-1" onclick="editProduct(\'' + p._id + '\')" title="Edit"><i class="bi bi-pencil"></i></button>';
+        html += '<button class="btn btn-sm btn-outline-success me-1" onclick="shareProduct(\'' + p._id + '\')" title="Share"><i class="bi bi-share"></i></button>';
+        html += '<button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(\'' + p._id + '\')" title="Delete"><i class="bi bi-trash"></i></button>';
+        html += '</td>';
+        html += '</tr>';
+      });
+      
+      tbody.innerHTML = html;
+    }
   </script>
 </body>
 </html>
