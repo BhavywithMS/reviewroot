@@ -1,224 +1,117 @@
-# Vercel Deployment Guide
+# Deploying ReviewRoot to Vercel
 
-Step-by-step instructions to deploy **ReviewRoot** on Vercel.
+Vercel is primarily designed for static sites and serverless functions (like Next.js), but it can perfectly host an Express backend and static frontend in a single repository.
 
----
-
-## Option A: Frontend on Vercel + Backend on Render (Recommended)
-
-This is the easiest approach - deploy frontend on Vercel and backend on Render.
-
-### Step A1: Deploy Backend on Render
-
-1. **Create Render Account**
-   - Go to https://render.com
-   - Sign up with GitHub
-
-2. **Deploy Backend**
-   - Click "New+" → "Web Service"
-   - Select your repository
-   - Configure:
-     - Name: `reviewroot-api`
-     - Environment: `Node`
-     - Build Command: `npm install`
-     - Start Command: `node server.js`
-   - Click "Deploy"
-
-3. **Add Environment Variables**
-   | Key | Value |
-   |-----|--------|
-   | MONGO_URI | Your MongoDB Atlas connection string |
-   | PORT | 3000 |
-   | NODE_ENV | production |
-   | BASE_URL | https://reviewroot-api.onrender.com |
-   | ALLOWED_ORIGINS | * |
-   | JWT_SECRET | random_string |
-
-4. **Note Your Backend URL**
-   - Example: `https://reviewroot-api.onrender.com`
+Follow these steps to deploy your **Express + Static Frontend** project to Vercel.
 
 ---
 
-### Step A2: Deploy Frontend on Vercel
+## Step 1: Update `server.js` for Vercel
 
-1. **Create Vercel Account**
-   - Go to https://vercel.com
-   - Sign up with GitHub
+Vercel runs backend code as a **Serverless Function**. Instead of telling the server to `listen` on a port, you need to **export** the Express application so Vercel can handle the HTTP requests.
 
-2. **Update Code for Vercel**
-   
-   Create `vercel.json` in project root:
-   ```json
-   {
-     "rewrites": [
-       { "source": "/(.*)", "destination": "/index.html" }
-     ]
-   }
-   ```
+At the very bottom of your `server.js` file, modify the "Start Server" block. 
 
-3. **Push Changes to GitHub**
-   ```bash
-   git add .
-   git commit -m "Add vercel config"
-   git push
-   ```
-
-4. **Deploy on Vercel**
-   - Go to https://vercel.com/dashboard
-   - Click "Add New..." → "Project"
-   - Import your repository
-   - Configure:
-     - Framework Preset: `Other`
-     - Build Command: (leave empty)
-     - Output Directory: `public`
-   - Click "Deploy"
-
-5. **Add Environment Variables (Optional)**
-   If you want frontend to work with different backend:
-   | Key | Value |
-   |-----|--------|
-   | VITE_API_URL | https://reviewroot-api.onrender.com |
-
----
-
-### Step A3: Update Backend BASE_URL
-
-After Vercel deployment, note your frontend URL (e.g., `https://reviewroot.vercel.app`)
-
-1. Go to Render dashboard
-2. Update `BASE_URL` to your Vercel URL
-3. Redeploy
-
----
-
-## Option B: Full Deployment on Vercel (Serverless)
-
-This deploys everything on Vercel using API routes. Requires code adaptation.
-
-### Step B1: Install Vercel CLI (Optional)
-```bash
-npm install -g vercel
+Change this:
+```javascript
+// Start Server
+app.listen(PORT, () => {
+  console.log('');
+  console.log('Server running');
+  console.log('Local:   http://localhost:' + PORT);
+  console.log('Health:  http://localhost:' + PORT + '/api/health');
+  console.log('Env:     ' + NODE_ENV);
+  console.log('');
+});
 ```
 
-### Step B2: Convert to Vercel API Routes
+To this:
+```javascript
+// Start Server (Only listen locally, don't listen on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log('');
+    console.log('Server running');
+    console.log('Local:   http://localhost:' + PORT);
+    console.log('Health:  http://localhost:' + PORT + '/api/health');
+    console.log('Env:     ' + NODE_ENV);
+    console.log('');
+  });
+}
 
-Create `api/` directory and convert routes:
+// Export the app for Vercel Serverless Function
+module.exports = app;
+```
 
-1. **Create api/server.js**
-   ```javascript
-   const { createServer } = require('http');
-   const { parse } = require('url');
-   const next = require('next');
-   const mongoose = require('mongoose');
-   
-   const dev = process.env.NODE_ENV !== 'production';
-   const app = next({ dev, dir: '.' });
-   const handle = app.getRequestHandler();
-   
-   app.prepare().then(() => {
-     createServer((req, res) => {
-       const parsedUrl = parse(req.url, true);
-       handle(req, res, parsedUrl);
-     }).listen(3000, (err) => {
-       if (err) throw err;
-       console.log('> Ready on http://localhost:3000');
-     });
-   });
-   ```
+---
 
-2. **Create individual API route files:**
-   - `api/auth/register.js`
-   - `api/auth/login.js`
-   - `api/products/index.js`
-   - `api/reviews/index.js`
+## Step 2: Update `vercel.json`
 
-### Step B3: Update package.json
+Currently, your `vercel.json` routes everything to `/index.html`. We need to tell Vercel to:
+1. Treat `server.js` as a Node.js serverless function.
+2. Route any `/api/*` traffic to `server.js`.
+3. Route everything else (your frontend) to the `public` folder.
+
+Replace the contents of your `vercel.json` with the following:
 
 ```json
 {
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "vercel-deploy": "node server.js"
-  }
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.html"
+    }
+  ]
 }
 ```
 
-### Step B4: Deploy to Vercel
+---
 
-```bash
-vercel
-```
+## Step 3: Deployment Options
 
-Or push to GitHub and import in Vercel dashboard.
+You can deploy using either the **Vercel CLI** or via **GitHub**.
+
+### Option A: Deploy via GitHub (Recommended)
+1. Push your project to a GitHub repository.
+2. Go to [Vercel Dashboard](https://vercel.com/dashboard) and click **Add New** > **Project**.
+3. Import your GitHub repository.
+4. **Important**: Before clicking "Deploy", expand the **Environment Variables** section and add the variables from your `.env` file (e.g., `MONGO_URI`, `JWT_SECRET`, etc.).
+5. Click **Deploy**.
+
+### Option B: Deploy via Vercel CLI
+1. Install the Vercel CLI globally if you haven't already:
+   ```bash
+   npm install -g vercel
+   ```
+2. Run the deployment command from your project root:
+   ```bash
+   vercel
+   ```
+3. Follow the prompts. When it asks if you want to link to an existing project, say **No**, and follow the setup instructions.
+4. Go to your project settings in the Vercel Dashboard and add your **Environment Variables** (`MONGO_URI`, `JWT_SECRET`, etc.).
+5. Run a production deployment:
+   ```bash
+   vercel --prod
+   ```
 
 ---
 
-## Testing Your Vercel Deployment
+## Troubleshooting
 
-### Test Commands
-```bash
-# Test health
-curl https://your-vercel-app.vercel.app/api/health
-
-# Test reviews
-curl https://your-vercel-app.vercel.app/api/reviews
-```
-
-### Complete Test Flow
-1. Visit `https://your-app.vercel.app`
-2. Register a business account
-3. Login to dashboard
-4. Add a product
-5. Copy feedback link
-6. Open in incognito window
-7. Register as customer
-8. Submit review
-9. Check dashboard for new review
-
----
-
-## Common Issues & Solutions
-
-| Issue | Solution |
-|-------|----------|
-| MongoDB connection | Check MONGO_URI in Vercel dashboard |
-| API 404 errors | Ensure `/api/` prefix in routes |
-| Session lost | Vercel serverless = stateless, use JWT |
-| Cold starts | First request may be slow on free tier |
-| CORS errors | Set ALLOWED_ORIGINS to your Vercel domain |
-
----
-
-## URLs After Deployment
-
-| Service | URL Format |
-|---------|------------|
-| Frontend | https://reviewroot.vercel.app |
-| Backend API | https://reviewroot-api.onrender.com/api |
-| Health Check | https://reviewroot-api.onrender.com/api/health |
-
----
-
-## Quick Summary
-
-### For Vercel Only (Frontend)
-1. Push code to GitHub
-2. Import to Vercel
-3. Set Output Directory: `public`
-4. Deploy!
-
-### For Full Stack
-1. Frontend → Vercel
-2. Backend → Render.com
-3. Update BASE_URL on Render
-
----
-
-## Success!
-
-Your ReviewRoot app on Vercel:
-- **Frontend**: https://your-app.vercel.app
-
-Start collecting reviews!
+- **500 Internal Server Error on `/api` routes**: Ensure your `MONGO_URI` is correctly set in your Vercel Environment Variables. The database connection might be failing.
+- **Frontend not loading**: Check the "routes" setup in `vercel.json`. It guarantees anything not starting with `/api` attempts to load `index.html` from `public`.

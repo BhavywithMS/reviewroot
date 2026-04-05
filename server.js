@@ -92,15 +92,20 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log('');
-  console.log('Server running');
-  console.log('Local:   http://localhost:' + PORT);
-  console.log('Health:  http://localhost:' + PORT + '/api/health');
-  console.log('Env:     ' + NODE_ENV);
-  console.log('');
-});
+// Start Server (Only listen locally, don't listen on Vercel)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log('');
+    console.log('Server running');
+    console.log('Local:   http://localhost:' + PORT);
+    console.log('Health:  http://localhost:' + PORT + '/api/health');
+    console.log('Env:     ' + NODE_ENV);
+    console.log('');
+  });
+}
+
+// Export the app for Vercel Serverless Function
+module.exports = app;
 
 // Graceful Shutdown
 process.on('SIGTERM', async () => {
