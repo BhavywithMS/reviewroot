@@ -12,7 +12,6 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
-// Security Middleware
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false
@@ -26,30 +25,34 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MongoDB Connection
 const MONGO_URI = process.env.MONGO_URI;
 
-if (!MONGO_URI || MONGO_URI.includes('<username>')) {
-  console.error('');
-  console.error('MONGO_URI is not set in your .env file.');
-  console.error('Please add your MongoDB Atlas connection string.');
-  console.error('');
-  process.exit(1);
+let isConnected = false;
+
+async function connectDB() {
+  if (isConnected) return;
+  
+  if (!MONGO_URI || MONGO_URI.includes('<username>')) {
+    throw new Error('MONGO_URI is not set');
+  }
+  
+  await mongoose.connect(MONGO_URI, {
+    maxPoolSize: 10,
+  });
+  isConnected = true;
+  console.log('MongoDB connected successfully');
 }
 
-const mongoOptions = {
-  maxPoolSize: 10,
-};
-
-mongoose.connect(MONGO_URI, mongoOptions)
-  .then(() => {
-    console.log('MongoDB connected successfully');
-    console.log('Environment:', NODE_ENV);
-  })
-  .catch((err) => {
-    console.error('MongoDB connection failed:', err.message);
-    process.exit(1);
-  });
+// Ensure database is connected before handling any requests
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection error:', error.message);
+    res.status(500).json({ message: 'Internal Server Error: Database Connection Failed' });
+  }
+});
 
 // API Routes
 const reviewRoutes = require('./routes/reviewRoutes');
